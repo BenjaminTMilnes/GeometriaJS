@@ -9,6 +9,39 @@ https://www.benjamintmilnes.com
 */
 
 
+function square(number) {
+    return Math.pow(number, 2);
+}
+
+function cube(number) {
+    return Math.pow(number, 3);
+}
+
+function squareRoot(number) {
+    return Math.sqrt(number);
+}
+
+function cubeRoot(number) {
+    return Math.cbrt(number);
+}
+
+function between(minimum, value, maximum) {
+    if (value < minimum) {
+        return minimum;
+    }
+    else if (value > maximum) {
+        return maximum;
+    }
+    else {
+        return value;
+    }
+}
+
+function isBetween(value, limit1, limit2) {
+    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
+}
+
+
 function toRadians(degrees) {
     return (degrees / 360) * 2 * Math.PI;
 }
@@ -98,38 +131,6 @@ function a2(degrees) {
     return new Angle(degrees);
 }
 
-
-function square(number) {
-    return Math.pow(number, 2);
-}
-
-function cube(number) {
-    return Math.pow(number, 3);
-}
-
-function squareRoot(number) {
-    return Math.sqrt(number);
-}
-
-function cubeRoot(number) {
-    return Math.cbrt(number);
-}
-
-function between(minimum, value, maximum) {
-    if (value < minimum) {
-        return minimum;
-    }
-    else if (value > maximum) {
-        return maximum;
-    }
-    else {
-        return value;
-    }
-}
-
-function isBetween(value, limit1, limit2) {
-    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
-}
 
 class Vector2D {
     constructor(x = 0, y = 0) {
@@ -243,6 +244,13 @@ class Vector2D {
 
     dot(vector) {
         return this.x * vector.x + this.y * vector.y;
+    }
+
+    of(vector) {
+        var sign = Math.sign(vectorProduct(vector, this));
+        var theta = Math.abs(angleBetween(vector, this));
+
+        return a2(sign * theta);
     }
 
     translate(dx = 0, dy = 0) {
@@ -363,6 +371,16 @@ class Vector3D {
         return this.x * vector.x + this.y * vector.y + this.z * vector.z;
     }
 
+    cross(vector) {
+        var v = new Vector3D();
+
+        v.x = this.y * vector.z - this.z * vector.y;
+        v.y = this.z * vector.x - this.x * vector.z;
+        v.z = this.x * vector.y - this.y * vector.x;
+
+        return v;
+    }
+
     translate(dx = 0, dy = 0, dz = 0) {
         var v = new Vector3D();
 
@@ -437,44 +455,18 @@ function v3(x = 0, y = 0, z = 0) {
 const zz = v2(0, 0);
 const zzz = v3(0, 0, 0);
 
-function separation(point1, point2) {
-    return point2.subtract(point1).m;
+function sumVectors(vectors) {
+    var sum = zz;
+
+    vectors.forEach(v => {
+        sum = sum.add(v);
+    });
+
+    return sum;
 }
 
-function midpoint(point1, point2) {
-    return point1.add(point2.subtract(point1).times(0.5));
-}
-
-function normal(point1, point2) {
-    return point2.subtract(point1).n;
-}
-
-function scalarProduct(vector1, vector2) {
-    if (vector1.z !== undefined && vector2.z !== undefined) {
-        return vector1.x * vector2.x + vector1.y * vector2.y + vector1.z * vector2.z;
-    }
-    else {
-        return vector1.x * vector2.x + vector1.y * vector2.y;
-    }
-}
-
-function vectorProduct(vector1, vector2) {
-    if (vector1.z !== undefined && vector2.z !== undefined) {
-        var vector3 = v3();
-
-        vector3.x = vector1.y * vector2.z - vector1.z * vector2.y;
-        vector3.y = vector1.z * vector2.x - vector1.x * vector2.z;
-        vector3.z = vector1.x * vector2.y - vector1.y * vector2.x;
-
-        return vector3;
-    }
-    else {
-        return vector1.x * vector2.y - vector1.y * vector2.x;
-    }
-}
-
-function angleBetween(vector1, vector2) {
-    return acos(scalarProduct(vector1, vector2) / (vector1.m * vector2.m));
+function averageVector(vectors) {
+    return sumVectors(vectors).times(1 / vectors.length);
 }
 
 function centreOfBoundingRectangle(points) {
@@ -494,6 +486,35 @@ function from(vector1) {
     }
 }
 
+function separation(point1, point2) {
+    return point2.subtract(point1).m;
+}
+
+function midpoint(point1, point2) {
+    return point1.add(point2.subtract(point1).times(0.5));
+}
+
+function normal(point1, point2) {
+    return point2.subtract(point1).n;
+}
+
+function scalarProduct(vector1, vector2) {
+    return vector1.dot(vector2);
+}
+
+function vectorProduct(vector1, vector2) {
+    if (vector1 instanceof Vector3D && vector2 instanceof Vector3D) {
+        return vector1.cross(vector2);
+    }
+    else if (vector1 instanceof Vector2D && vector2 instanceof Vector2D) {
+        return vector1.x * vector2.y - vector1.y * vector2.x;
+    }
+}
+
+function angleBetween(vector1, vector2) {
+    return acos(scalarProduct(vector1, vector2) / (vector1.m * vector2.m));
+}
+
 function transformToUNCoordinates(v, u, n) {
     var alpha = (v.x * n.y - v.y * n.x) / (u.x * n.y - u.y * n.x);
     var beta = (n.x == 0) ? (v.y - alpha * u.y) / n.y : (v.x - alpha * u.x) / n.x;
@@ -507,16 +528,6 @@ function getSeparationInTermsOfUAndN(point1, point2, u, n) {
     var e3 = e2.subtract(e1);
 
     return { "u": e3.x, "n": e3.y };
-}
-
-function sumVectors(vectors) {
-    var sum = zz;
-
-    for (let vector of vectors) {
-        sum = sum.add(vector);
-    }
-
-    return sum;
 }
 
 
