@@ -1,6 +1,10 @@
 /*
 
-v1.0
+Geometria JS, v1.0
+https://github.com/BenjaminTMilnes/GeometriaJS
+
+by B. T. Milnes 
+https://www.benjamintmilnes.com
 
 */
 
