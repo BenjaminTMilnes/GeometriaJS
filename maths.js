@@ -55,6 +55,67 @@ function between(minimum, value, maximum) {
     }
 }
 
+function isBetween(value, limit1, limit2) {
+    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
+}
+
+class Angle {
+    constructor(degrees = 0) {
+        this.degrees = degrees;
+    }
+
+    get radians() {
+        return toRadians(this.degrees);
+    }
+
+    get gradians() {
+        return (this.degrees / 360) * 400;
+    }
+
+    get turns() {
+        return (this.degrees / 360);
+    }
+
+    normalise() {
+        if (this.degrees >= 360) {
+            this.degrees = this.degrees % 360;
+        }
+        else if (this.degrees <= -360) {
+            this.degrees = - ((-this.degrees) % 360);
+        }
+    }
+
+    add(angle) {
+        return new Angle(this.degrees + angle.degrees);
+    }
+
+    subtract(angle) {
+        return new Angle(this.degrees - angle.degrees);
+    }
+
+    times(scalar) {
+        return new Angle(this.degrees * scalar);
+    }
+
+    toString(unit = "degrees", ndp = 1, nsf = 0) {
+        if (unit == "degrees") {
+            if (ndp >= 0) {
+                return this.degrees.toFixed(ndp) + "°";
+            }
+            else if (nsf >= 1) {
+                return this.degrees.toPrecision(nsf) + "°";
+            }
+            else {
+                return this.degrees.toString() + "°";
+            }
+        }
+    }
+}
+
+function a2(degrees) {
+    return new Angle(degrees);
+}
+
 class Vector2D {
     constructor(x = 0, y = 0) {
         this.x = x;
@@ -441,424 +502,4 @@ function sumVectors(vectors) {
     }
 
     return sum;
-}
-
-class Matrix2D {
-    constructor(a11 = 0, a12 = 0, a21 = 0, a22 = 0) {
-        this.a11 = a11;
-        this.a12 = a12;
-        this.a21 = a21;
-        this.a22 = a22;
-    }
-
-    times(vector) {
-        var v1 = new Vector2D();
-
-        v1.x = this.a11 * vector.x + this.a12 * vector.y;
-        v1.y = this.a21 * vector.x + this.a22 * vector.y
-
-        return v1;
-    }
-}
-
-// Positive angles rotate anticlockwise.
-class RotationMatrix2D extends Matrix2D {
-    constructor(theta = 0) {
-        super(cos(theta), -sin(theta), sin(theta), cos(theta));
-
-        this.theta = theta;
-        this.thetaR = toRadians(theta);
-    }
-}
-
-class Matrix3D {
-    constructor(a11 = 0, a12 = 0, a13 = 0, a21 = 0, a22 = 0, a23 = 0, a31 = 0, a32 = 0, a33 = 0) {
-        this.a11 = a11;
-        this.a12 = a12;
-        this.a13 = a13;
-        this.a21 = a21;
-        this.a22 = a22;
-        this.a23 = a23;
-        this.a31 = a31;
-        this.a32 = a32;
-        this.a33 = a33;
-    }
-
-    timesVector(vector) {
-        var x = this.a11 * vector.x + this.a12 * vector.y + this.a13 * vector.z;
-        var y = this.a21 * vector.x + this.a22 * vector.y + this.a23 * vector.z;
-        var z = this.a31 * vector.x + this.a32 * vector.y + this.a33 * vector.z;
-
-        return v3(x, y, z);
-    }
-
-    timesMatrix(matrix) {
-        var m = new Matrix3D();
-
-        m.a11 = this.a11 * matrix.a11 + this.a12 * matrix.a21 + this.a13 * matrix.a31;
-        m.a12 = this.a11 * matrix.a12 + this.a12 * matrix.a22 + this.a13 * matrix.a32;
-        m.a13 = this.a11 * matrix.a13 + this.a12 * matrix.a23 + this.a13 * matrix.a33;
-        m.a21 = this.a21 * matrix.a11 + this.a22 * matrix.a21 + this.a23 * matrix.a31;
-        m.a22 = this.a21 * matrix.a12 + this.a22 * matrix.a22 + this.a23 * matrix.a32;
-        m.a23 = this.a21 * matrix.a13 + this.a22 * matrix.a23 + this.a23 * matrix.a33;
-        m.a31 = this.a31 * matrix.a11 + this.a32 * matrix.a21 + this.a33 * matrix.a31;
-        m.a32 = this.a31 * matrix.a12 + this.a32 * matrix.a22 + this.a33 * matrix.a32;
-        m.a33 = this.a31 * matrix.a13 + this.a32 * matrix.a23 + this.a33 * matrix.a33;
-
-        return m;
-    }
-}
-
-function isometricProjectionMatrix(alpha = 33, beta = 45) {
-    var m1 = new Matrix3D(1, 0, 0, 0, cos(alpha), sin(alpha), 0, -sin(alpha), cos(alpha));
-    var m2 = new Matrix3D(cos(beta), 0, -sin(beta), 0, 1, 0, sin(beta), 0, cos(beta));
-    var m3 = m1.timesMatrix(m2);
-
-    return m3;
-}
-
-function perspectiveProjectionMatrix(thetaX = 0, thetaY = 0, thetaZ = 0) {
-    var m1 = new Matrix3D(1, 0, 0, 0, cos(thetaX), sin(thetaX), 0, -sin(thetaX), cos(thetaX));
-    var m2 = new Matrix3D(cos(thetaY), 0, -sin(thetaY), 0, 1, 0, sin(thetaY), 0, cos(thetaY));
-    var m3 = new Matrix3D(cos(thetaZ), sin(thetaZ), 0, -sin(thetaZ), cos(thetaZ), 0, 0, 0, 1);
-    var m4 = m1.timesMatrix(m2).timesMatrix(m3);
-
-    return m4;
-}
-
-function perspectiveProjectPoint(point, cameraPosition, cameraOrientation, displaySurfacePosition) {
-    var m = perspectiveProjectionMatrix(cameraOrientation.x, cameraOrientation.y, cameraOrientation.z);
-    var a = point.subtract(cameraPosition);
-    var b = m.timesVector(a);
-
-    var x = (displaySurfacePosition.z / b.z) * b.x + displaySurfacePosition.x;
-    var y = (displaySurfacePosition.z / b.z) * b.y + displaySurfacePosition.y;
-
-    return v2(x, y);
-}
-
-function isBetween(value, limit1, limit2) {
-    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
-}
-
-// Characterises a function in the form ax + by + c = 0 as opposed to y = mx + n.
-// m = -a/b
-// n = -c/b
-// a = y1 - y2
-// b = x2 - x1
-// c = -a x1 - b y1
-// Useful for determining whether two lines cross.
-class GeneralLinearFunction {
-    constructor(a, b, c) {
-        this.a = a;
-        this.b = b;
-        this.c = c;
-        this.endpoint1 = null;
-        this.endpoint2 = null;
-    }
-
-    static fromVertices(vertex1, vertex2) {
-        var line = new GeneralLinearFunction(0, 0, 0);
-
-        line.a = vertex1.y - vertex2.y;
-        line.b = vertex2.x - vertex1.x;
-        line.c = -line.a * vertex1.x - line.b * vertex1.y;
-        line.endpoint1 = vertex1;
-        line.endpoint2 = vertex2;
-
-        return line;
-    }
-
-    get gradient() {
-        if (this.isLineOfConstantY) {
-            return 0;
-        }
-        else if (this.isLineOfConstantX) {
-            return Infinity;
-        }
-        else {
-            return -this.a / this.b;
-        }
-    }
-
-    get m() {
-        return this.gradient;
-    }
-
-    get yIntercept() {
-        if (this.isLineOfConstantX) {
-            return null;
-        }
-        else {
-            return - this.c / this.b;
-        }
-    }
-
-    get n() {
-        return this.yIntercept;
-    }
-
-    get xIntercept() {
-        if (this.isLineOfConstantY) {
-            return null;
-        }
-        else {
-            return - this.c / this.a;
-        }
-    }
-
-    get e1() {
-        return this.endpoint1;
-    }
-
-    get e2() {
-        return this.endpoint2;
-    }
-
-    get isLineOfConstantX() {
-        return this.b == 0;
-    }
-
-    get isLineOfConstantY() {
-        return this.a == 0;
-    }
-
-    get u() {
-        if (this.e1 !== null && this.e2 != null) {
-            return from(this.e1).to(this.e2).u;
-        }
-        else {
-            if (this.isLineOfConstantX) {
-                return v2(0, 1);
-            }
-            else {
-                return v2(1, this.m).u;
-            }
-        }
-    }
-
-    evaluateAtX(x) {
-        if (this.isLineOfConstantX) {
-            return null;
-        }
-
-        return (-this.a * x - this.c) / this.b;
-    }
-
-    evaluateAtY(y) {
-        if (this.isLineOfConstantY) {
-            return null;
-        }
-
-        return (-this.b * y - this.c) / this.a;
-    }
-
-    vertexAtX(x) {
-        if (this.isLineOfConstantX) {
-            return null;
-        }
-
-        return v(x, this.evaluateAtX(x));
-    }
-
-    vertexAtY(y) {
-        if (this.isLineOfConstantY) {
-            return null;
-        }
-
-        return v(this.evaluateAtY(y), y);
-    }
-
-    intersects(line) {
-        return this.m != line.m;
-    }
-
-    getIntersectionPoint(line) {
-        if (!this.intersects(line)) {
-            return null;
-        }
-
-        var x = (this.b * line.c - this.c * line.b) / (this.a * line.b - this.b * line.a);
-        var y = 0;
-
-        if (this.isLineOfConstantX) {
-            y = line.evaluateAtX(x);
-        }
-        else {
-            y = this.evaluateAtX(x);
-        }
-
-        return v(x, y);
-    }
-
-    intersectsWithinXRange(line, x1, x2) {
-        if (!this.intersects(line)) {
-            return false;
-        }
-
-        var p = this.getIntersectionPoint(line);
-
-        return p.x >= Math.min(x1, x2) && p.x <= Math.max(x1, x2);
-    }
-
-    intersectsWithinYRange(line, y1, y2) {
-        if (!this.intersects(line)) {
-            return false;
-        }
-
-        var p = this.getIntersectionPoint(line);
-
-        return p.y >= Math.min(y1, y2) && p.y <= Math.max(y1, y2);
-    }
-
-    intersectsBetweenEndpoints(line) {
-        if (!this.intersects(line)) {
-            return false;
-        }
-
-        var p = this.getIntersectionPoint(line);
-
-        return isBetween(p.x, this.e1.x, this.e2.x) && isBetween(p.y, this.e1.y, this.e2.y) && isBetween(p.x, line.e1.x, line.e2.x) && isBetween(p.y, line.e1.y, line.e2.y);
-    }
-
-    isPointAboveLine(point) {
-        if (this.isLineOfConstantX) {
-            return undefined;
-        }
-
-        var y = this.evaluateAtX(point.x);
-
-        return point.y > y;
-    }
-
-    isPointBelowLine(point) {
-        if (this.isLineOfConstantX) {
-            return undefined;
-        }
-
-        var y = this.evaluateAtX(point.x);
-
-        return point.y < y;
-    }
-
-    isPointLeftOfLine(point) {
-        if (this.isLineOfConstantY) {
-            return undefined;
-        }
-
-        var x = this.evaluateAtY(point.y);
-
-        return point.x < x;
-    }
-
-    isPointRightOfLine(point) {
-        if (this.isLineOfConstantY) {
-            return undefined;
-        }
-
-        var x = this.evaluateAtY(point.y);
-
-        return point.x > x;
-    }
-
-    isPointOnLine(point) {
-        if (!this.isLineOfConstantX) {
-            var y = this.evaluateAtX(point.x);
-
-            return point.y == y;
-        }
-        else {
-            var x = this.evaluateAtY(point.y);
-
-            return point.x == x;
-        }
-    }
-}
-
-function quadraticFunction(a, b, c, root = 1) {
-    return (-b + Math.sign(root) * Math.sqrt(b * b - 4 * a * c)) / (2 * a);
-}
-
-// Characterises a function in the form (x - cx)^{2} + (y - cy)^{2} = r^{2}
-// Useful for determining whether two circles, or a line and a circle, cross.
-class GeneralArcFunction {
-    constructor(centre, radius, angle1 = 0, angle2 = 360) {
-        this.centre = centre;
-        this.radius = radius;
-        this.angle1 = angle1;
-        this.angle2 = angle2;
-    }
-
-    get circumference() {
-        return 2 * Math.PI * this.radius;
-    }
-
-    intersects(circle) {
-        return separation(this.centre, circle.centre) < this.radius + circle.radius;
-    }
-
-    getIntersectionPoints(circle) {
-
-    }
-
-    intersectsLine(line) {
-        return this.getIntersectionPointsWithLine(line).length > 0;
-    }
-
-    getIntersectionPointsWithLine(line) {
-        var cx = this.centre.x;
-        var cy = this.centre.y;
-        var r = this.radius;
-
-        var a = line.a;
-        var b = line.b;
-        var c = line.c;
-
-        var aa = 1 + (a * a) / (b * b);
-        var bb = (-2 * cx) + ((2 * a * c) / (b * b)) + ((2 * cy * a) / (b));
-        var cc = cx * cx + cy * cy + (c * c) / (b * b) + (2 * cy * c) / (b) - r * r;
-
-        var root = bb * bb - 4 * aa * cc;
-
-        var intersections = [];
-
-        if (root >= 0) {
-            var x1 = quadraticFunction(aa, bb, cc, 1);
-            var y1 = line.m * x1 + line.n;
-            var p1 = v2(x1, y1);
-            var p11 = from(this.centre).to(p1);
-
-            if ((this.angle2 >= this.angle1 && p11.a >= this.angle1 && p11.a < this.angle2) ||
-                (this.angle2 < this.angle1 && (p11.a >= this.angle1 || p11.a <= this.angle2))) {
-                intersections.push(p1);
-            }
-        }
-
-        if (root > 0) {
-            var x2 = quadraticFunction(aa, bb, cc, -1);
-            var y2 = line.m * x2 + line.n;
-            var p2 = v2(x2, y2);
-            var p22 = from(this.centre).to(p2);
-
-            if ((this.angle2 >= this.angle1 && p22.a >= this.angle1 && p22.a < this.angle2) ||
-                (this.angle2 < this.angle1 && (p22.a >= this.angle1 || p22.a <= this.angle2))) {
-                intersections.push(p2);
-            }
-        }
-
-        return intersections;
-    }
-
-    getIntersectionPointsWithLineWithinEndpoints(line) {
-        var points = this.getIntersectionPointsWithLine(line);
-
-        if (!line.isLineOfConstantX) {
-            points = points.filter(p => p.x >= line.e1.x && p.x <= line.e2.x);
-        }
-        else {
-            points = points.filter(p => p.y >= line.e1.y && p.y <= line.e2.y);
-        }
-
-        return points;
-    }
 }

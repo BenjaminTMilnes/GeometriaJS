@@ -65,6 +65,10 @@ function between(minimum, value, maximum) {
     }
 }
 
+function isBetween(value, limit1, limit2) {
+    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
+}
+
 class Vector2D {
     constructor(x = 0, y = 0) {
         this.x = x;
@@ -453,6 +457,8 @@ function sumVectors(vectors) {
     return sum;
 }
 
+
+
 class Matrix2D {
     constructor(a11 = 0, a12 = 0, a21 = 0, a22 = 0) {
         this.a11 = a11;
@@ -547,9 +553,7 @@ function perspectiveProjectPoint(point, cameraPosition, cameraOrientation, displ
     return v2(x, y);
 }
 
-function isBetween(value, limit1, limit2) {
-    return value >= Math.min(limit1, limit2) && value <= Math.max(limit1, limit2);
-}
+
 
 // Characterises a function in the form ax + by + c = 0 as opposed to y = mx + n.
 // m = -a/b

@@ -1,5 +1,5 @@
 
-filePaths = ["version_text.txt", "maths.js", "graphics.js", "collisions.js", "application.js"]
+filePaths = ["version_text.txt", "maths.js", "matrices.js", "general-functions.js", "graphics.js", "collisions.js", "application.js"]
 files = []
 
 for filePath in filePaths:
