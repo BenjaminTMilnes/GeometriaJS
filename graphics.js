@@ -114,6 +114,10 @@ class GraphicsContext {
             return null;
         }
 
+        if (clippingPath instanceof Path2D) {
+            return clippingPath;
+        }
+
         var path = new Path2D();
 
         path.moveTo(clippingPath[0].x, clippingPath[0].y);
@@ -168,11 +172,11 @@ class GraphicsContext {
         this.context.restore();
     }
 
-    drawEllipse(centre, majorAxis, minorAxis, rotation, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null) {
-        this.drawEllipticalArc(centre, majorAxis, minorAxis, rotation, 0, 360, fillColour, lineColour, lineWidth, lineDashStyle, clippingPath);
+    drawEllipse(centre, majorAxis, minorAxis, rotation, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null, clippingFillRule = "nonzero") {
+        this.drawEllipticalArc(centre, majorAxis, minorAxis, rotation, 0, 360, fillColour, lineColour, lineWidth, lineDashStyle, clippingPath, clippingFillRule);
     }
 
-    drawEllipticalArc(centre, majorAxis, minorAxis, rotation, fromAngle, toAngle, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null) {
+    drawEllipticalArc(centre, majorAxis, minorAxis, rotation, fromAngle, toAngle, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null, clippingFillRule = "nonzero") {
         var semiMajorAxis = majorAxis / 2;
         var semiMinorAxis = minorAxis / 2;
 
@@ -188,7 +192,7 @@ class GraphicsContext {
 
         clippingPath = this._convertClippingPath(clippingPath);
         if (clippingPath != null) {
-            this.context.clip(clippingPath);
+            this.context.clip(clippingPath, clippingFillRule);
         }
 
         this.context.ellipse(centre.x, centre.y, semiMajorAxis, semiMinorAxis, toRadians(rotation), toRadians(fromAngle), toRadians(toAngle));
@@ -207,7 +211,7 @@ class GraphicsContext {
         this.context.restore();
     }
 
-    drawPath(vertices, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null) {
+    drawPath(vertices, fillColour = "none", lineColour = "black", lineWidth = 1, lineDashStyle = [], clippingPath = null, clippingFillRule = "nonzero") {
 
         if (vertices == undefined || vertices.length < 2) {
             return;
@@ -224,8 +228,9 @@ class GraphicsContext {
         this.context.beginPath();
 
         clippingPath = this._convertClippingPath(clippingPath);
+
         if (clippingPath != null) {
-            this.context.clip(clippingPath);
+            this.context.clip(clippingPath, clippingFillRule);
         }
 
         this.context.moveTo(vertices[0].x, vertices[0].y);
